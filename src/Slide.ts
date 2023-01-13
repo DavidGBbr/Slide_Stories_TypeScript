@@ -1,22 +1,34 @@
 export default class Slide {
   container: Element;
-  elements: Element[];
+  slides: Element[];
   controls: Element;
   time: number;
+  index: number;
+  slide: Element;
   constructor(
     container: Element,
-    elements: Element[],
+    slides: Element[],
     controls: Element,
     time: number = 5000
   ) {
     this.container = container;
-    this.elements = elements;
+    this.slides = slides;
     this.controls = controls;
     this.time = time;
+    this.index = 0;
+    this.slide = this.slides[this.index];
 
-    console.log(this.container);
-    console.log(this.elements);
-    console.log(this.controls);
-    console.log(this.time);
+    this.show(this.index);
+  }
+  // método que vai esconder um elemento
+  hide(el: Element) {
+    el.classList.remove("active");
+  }
+  //método que vai passar a classe active para o slide.
+  show(index: number) {
+    this.index = index; // index ativo no momento
+    this.slide = this.slides[this.index]; // slide ativo no momento
+    this.slides.forEach((el) => this.hide(el)); //removendo a classe de todos elementos
+    this.slide.classList.add("active"); // passando a classe para o elemento ativo
   }
 }
