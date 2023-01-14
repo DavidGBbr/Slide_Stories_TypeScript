@@ -8,6 +8,8 @@ export default class Slide {
   index: number;
   slide: Element;
   timeout: Timeout | null;
+  paused: boolean;
+  pausedTimeout: Timeout | null;
   constructor(
     container: Element,
     slides: Element[],
@@ -20,9 +22,11 @@ export default class Slide {
     this.time = time;
 
     this.timeout = null;
+    this.pausedTimeout = null;
     this.index = 0;
     this.slide = this.slides[this.index];
 
+    this.paused = false;
     this.init();
   }
   // método que vai esconder um elemento
@@ -44,15 +48,31 @@ export default class Slide {
   }
   //método que vai retornar o slide
   prev() {
+    if (this.paused) return;
     const prev = this.index > 0 ? this.index - 1 : this.slides.length - 1;
     this.show(prev);
   }
   //método que vai avançar o slide
   next() {
+    if (this.paused) return;
     const next = this.index + 1 < this.slides.length ? this.index + 1 : 0;
     this.show(next);
   }
-
+  // método que vai pausar o slide
+  pause() {
+    this.pausedTimeout = new Timeout(() => {
+      this.timeout?.pause();
+      this.paused = true;
+    }, 300);
+  }
+  //método que vai despausar o slide
+  continue() {
+    this.pausedTimeout?.clear();
+    if (this.paused) {
+      this.paused = false;
+      this.timeout?.continue();
+    }
+  }
   //método que vai adicionar os controles
   private addControls() {
     const prevButton = document.createElement("button");
@@ -61,6 +81,9 @@ export default class Slide {
     nextButton.innerText = "Próximo Slide";
     this.controls.appendChild(prevButton);
     this.controls.appendChild(nextButton);
+
+    this.controls.addEventListener("pointerdown", () => this.pause());
+    this.controls.addEventListener("pointerup", () => this.continue());
 
     prevButton.addEventListener("pointerup", () => this.prev());
     nextButton.addEventListener("pointerup", () => this.next());
