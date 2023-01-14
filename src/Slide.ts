@@ -23,7 +23,9 @@ export default class Slide {
 
     this.timeout = null;
     this.pausedTimeout = null;
-    this.index = 0;
+    this.index = localStorage.getItem("activeSlide")
+      ? Number(localStorage.getItem("activeSlide"))
+      : 0;
     this.slide = this.slides[this.index];
 
     this.paused = false;
@@ -32,14 +34,33 @@ export default class Slide {
   // método que vai esconder um elemento
   hide(el: Element) {
     el.classList.remove("active");
+    if (el instanceof HTMLVideoElement) {
+      el.currentTime = 0;
+      el.pause();
+    }
   }
   //método que vai passar a classe active para o slide.
   show(index: number) {
     this.index = index; // index ativo no momento
     this.slide = this.slides[this.index]; // slide ativo no momento
+    localStorage.setItem("activeSlide", String(this.index));
+
     this.slides.forEach((el) => this.hide(el)); //removendo a classe de todos elementos
     this.slide.classList.add("active"); // passando a classe para o elemento ativo
-    this.auto(this.time);
+    if (this.slide instanceof HTMLVideoElement) {
+      this.autoVideo(this.slide);
+    } else {
+      this.auto(this.time);
+    }
+  }
+  autoVideo(video: HTMLVideoElement) {
+    video.muted = true;
+    video.play();
+    let firstPlay = true;
+    video.addEventListener("playing", () => {
+      if (firstPlay) this.auto(video.duration * 1000);
+      firstPlay = false;
+    });
   }
   // método que vai passar o slide de acordo com o tempo
   auto(time: number) {
@@ -63,6 +84,7 @@ export default class Slide {
     this.pausedTimeout = new Timeout(() => {
       this.timeout?.pause();
       this.paused = true;
+      if (this.slide instanceof HTMLVideoElement) this.slide.pause();
     }, 300);
   }
   //método que vai despausar o slide
@@ -71,6 +93,7 @@ export default class Slide {
     if (this.paused) {
       this.paused = false;
       this.timeout?.continue();
+      if (this.slide instanceof HTMLVideoElement) this.slide.play();
     }
   }
   //método que vai adicionar os controles
